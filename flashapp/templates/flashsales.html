@@ -1,0 +1,14 @@
+<h2>Welcome, {{ username }}!</h2>
+<h3>Flash Sales:</h3>
+<ul>
+  {% for sale in sales %}
+    <li>
+      <strong>{{ sale.title }}</strong><br>
+      {{ sale.description }}<br>
+      Price: ${{ sale.price }}<br>
+      Ends: {{ sale.end_time }}
+    </li>
+  {% empty %}
+    <li>No active flash sales</li>
+  {% endfor %}
+</ul>

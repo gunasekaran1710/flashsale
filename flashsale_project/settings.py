@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'flashapp',  
 ]
 
 MIDDLEWARE = [
@@ -50,6 +51,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'flashsale_project.urls'
+ALLOWED_HOSTS = ['flashsale.onrender.com', 'localhost', '127.0.0.1']
+
 
 TEMPLATES = [
     {

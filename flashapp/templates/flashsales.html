@@ -66,7 +66,6 @@
       </script>
     {% empty %}
       <li>No active flash sales</li>
-
       <script>
         showNotification(
           "No Flash Sales",
@@ -79,6 +78,19 @@
   </ul>
 
   <script>
+    // Define showNotification before any use
+    function showNotification(title, description, price, endTime) {
+      Toastify({
+        text: `${title}\n${description}\nPrice: $${price}\nEnds: ${endTime}`,
+        duration: 6000,
+        close: true,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#4CAF50",
+        stopOnFocus: true
+      }).showToast();
+    }
+
     // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBtrJeMwMfj_rXWJe9000x2845S7Y1smCM",
@@ -99,7 +111,6 @@
       navigator.serviceWorker.register('/firebase-messaging-sw.js')
         .then(reg => {
           console.log("Service Worker registered:", reg);
-          messaging.useServiceWorker(reg);
         })
         .catch(err => {
           console.error("Service Worker registration failed:", err);
@@ -111,7 +122,7 @@
       Notification.requestPermission().then(permission => {
         if (permission === "granted") {
           messaging.getToken({
-            vapidKey: "BLBRtCQetdtX7CesrSVHygJYYng_CCp_cj6Dbr0JOO1UOLBuEAtTAX_d40vEYtWORn9cdbrkTBdklE4w14IFDnE"  // Replace from Firebase → Cloud Messaging
+            vapidKey: "BLBRtCQetdtX7CesrSVHygJYYng_CCp_cj6Dbr0JOO1UOLBuEAtTAX_d40vEYtWORn9cdbrkTBdklE4w14IFDnE"
           }).then(currentToken => {
             if (currentToken) {
               console.log("FCM Token:", currentToken);
@@ -128,25 +139,12 @@
       });
     }
 
-    // Handle incoming messages while app is in focus
+    // Handle messages when in focus
     messaging.onMessage(payload => {
       console.log("Message received:", payload);
       const { title, body } = payload.notification;
       new Notification(title, { body });
     });
-
-    // Show toast message
-    function showNotification(title, description, price, endTime) {
-      Toastify({
-        text: `${title}\n${description}\nPrice: $${price}\nEnds: ${endTime}`,
-        duration: 6000,
-        close: true,
-        gravity: "top",
-        position: "right",
-        backgroundColor: "#4CAF50",
-        stopOnFocus: true
-      }).showToast();
-    }
   </script>
 </body>
 </html>

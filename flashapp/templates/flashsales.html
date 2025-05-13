@@ -1,60 +1,152 @@
-<!-- <h2>Welcome, {{ username }}!</h2>
-<h3>Flash Sales:</h3>
-<ul>
-  {% for sale in sales %}
-    <li>
-      <strong>{{ sale.title }}</strong><br>
-      {{ sale.description }}<br>
-      Price: ${{ sale.price }}<br>
-      Ends: {{ sale.end_time }}
-    </li>
-  {% empty %}
-    <li>No active flash sales</li>
-  {% endfor %}
-</ul> -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Welcome</title>
+  <meta charset="UTF-8">
+  <title>Flash Sales Notification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Toastify CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-messaging-compat.js"></script>
+
+  <!-- Toastify -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      color: #333;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      margin-bottom: 15px;
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <h2>Welcome, {{ username }}!</h2>
+  <h2>Welcome, {{ username }}</h2>
 
-    <!-- Toastify JS -->
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <button onclick="requestNotificationPermission()">Enable Notifications</button>
 
-    <script>
-        function showNotification(title, description, price, endTime) {
-            Toastify({
-                text: `${title}\n${description}\nPrice: $${price}\nEnds: ${endTime}`,
-                duration: 6000,
-                close: true,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "#4CAF50",
-                stopOnFocus: true
-            }).showToast();
+  <h3>Flash Sales:</h3>
+  <ul>
+    {% for sale in sales %}
+      <li>
+        <strong>{{ sale.title }}</strong><br>
+        {{ sale.description }}<br>
+        Price: ${{ sale.price }}<br>
+        Ends: {{ sale.end_time }}
+      </li>
+
+      <script>
+        showNotification(
+          "{{ sale.title|escapejs }}",
+          "{{ sale.description|escapejs }}",
+          "{{ sale.price }}",
+          "{{ sale.end_time|date:'Y-m-d H:i' }}"
+        );
+      </script>
+    {% empty %}
+      <li>No active flash sales</li>
+
+      <script>
+        showNotification(
+          "No Flash Sales",
+          "There are currently no active flash sales.",
+          "",
+          ""
+        );
+      </script>
+    {% endfor %}
+  </ul>
+
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBtrJeMwMfj_rXWJe9000x2845S7Y1smCM",
+      authDomain: "gunasekaran-80514.firebaseapp.com",
+      projectId: "gunasekaran-80514",
+      storageBucket: "gunasekaran-80514.appspot.com",
+      messagingSenderId: "614767996940",
+      appId: "1:614767996940:web:6f3b4106f60ece430d3e29",
+      measurementId: "G-GNLVP9K3VX"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then(reg => {
+          console.log("Service Worker registered:", reg);
+          messaging.useServiceWorker(reg);
+        })
+        .catch(err => {
+          console.error("Service Worker registration failed:", err);
+        });
+    }
+
+    // Request permission and get token
+    function requestNotificationPermission() {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          messaging.getToken({
+            vapidKey: "BLBRtCQetdtX7CesrSVHygJYYng_CCp_cj6Dbr0JOO1UOLBuEAtTAX_d40vEYtWORn9cdbrkTBdklE4w14IFDnE"  // Replace from Firebase → Cloud Messaging
+          }).then(currentToken => {
+            if (currentToken) {
+              console.log("FCM Token:", currentToken);
+              // TODO: send token to backend (Django) to save for user
+            } else {
+              console.log("No registration token available.");
+            }
+          }).catch(err => {
+            console.error("An error occurred while retrieving token.", err);
+          });
+        } else {
+          console.warn("Permission not granted.");
         }
+      });
+    }
 
-        {% for sale in sales %}
-            showNotification(
-                "{{ sale.title|escapejs }}",
-                "{{ sale.description|escapejs }}",
-                "{{ sale.price }}",
-                "{{ sale.end_time|date:'Y-m-d H:i' }}"
-            );
-        {% empty %}
-            showNotification(
-                "No Flash Sales",
-                "There are currently no active flash sales.",
-                "",
-                ""
-            );
-        {% endfor %}
-    </script>
+    // Handle incoming messages while app is in focus
+    messaging.onMessage(payload => {
+      console.log("Message received:", payload);
+      const { title, body } = payload.notification;
+      new Notification(title, { body });
+    });
+
+    // Show toast message
+    function showNotification(title, description, price, endTime) {
+      Toastify({
+        text: `${title}\n${description}\nPrice: $${price}\nEnds: ${endTime}`,
+        duration: 6000,
+        close: true,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "#4CAF50",
+        stopOnFocus: true
+      }).showToast();
+    }
+  </script>
 </body>
 </html>

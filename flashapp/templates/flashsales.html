@@ -1,4 +1,4 @@
-<h2>Welcome, {{ username }}!</h2>
+<!-- <h2>Welcome, {{ username }}!</h2>
 <h3>Flash Sales:</h3>
 <ul>
   {% for sale in sales %}
@@ -11,4 +11,50 @@
   {% empty %}
     <li>No active flash sales</li>
   {% endfor %}
-</ul>
+</ul> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome</title>
+
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</head>
+<body>
+    <h2>Welcome, {{ username }}!</h2>
+
+    <!-- Toastify JS -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <script>
+        function showNotification(title, description, price, endTime) {
+            Toastify({
+                text: `${title}\n${description}\nPrice: $${price}\nEnds: ${endTime}`,
+                duration: 6000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#4CAF50",
+                stopOnFocus: true
+            }).showToast();
+        }
+
+        {% for sale in sales %}
+            showNotification(
+                "{{ sale.title|escapejs }}",
+                "{{ sale.description|escapejs }}",
+                "{{ sale.price }}",
+                "{{ sale.end_time|date:'Y-m-d H:i' }}"
+            );
+        {% empty %}
+            showNotification(
+                "No Flash Sales",
+                "There are currently no active flash sales.",
+                "",
+                ""
+            );
+        {% endfor %}
+    </script>
+</body>
+</html>
